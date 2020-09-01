@@ -1,0 +1,77 @@
+Create a new Terraform file called main.tf.
+Create three variables.
+The first variable, called image_name, needs to be set to ghost:latest.
+The second variable is called container_name with a default of ghost_blog.
+The final variable is called ext_port and set the default to port 80.
+
+Create a Docker image resource called ghost_image that uses the image_name variable.
+
+Create a Docker container resource called ghost_container.
+The name will use the container_name variable.
+The image will use the ghost_image resource.
+The internal port will be set to 2368.
+The external port will use ext_port variable.
+
+Initialize Terraform.
+
+Create a Terraform plan that uses the following variables:
+
+container_name = ghost_blog1
+image_name = ghost:alpine
+ext_port = 8080
+Output the plan to a file called tfplan.
+
+Then apply the plan using tfplan and make sure that the apply doesn’t prompt for input.
+
+===============================================================
+ubuntu@ip-172-31-8-76:~/terraform/assignment2$ cat variables.tf
+variable "image_name" {
+    type        = string
+    description = "image you want to download"
+    default     = "ghost:latest"
+}
+
+variable "container_name" {
+    type        = string
+    description = "name of the container"
+    default     = "ghost_blog"
+}
+
+variable "ext_port" {
+    type          = number
+    description   = "port to the container"
+    default       = 8080
+}
+
+==============================================================
+ubuntu@ip-172-31-8-76:~/terraform/assignment2$ cat main.tf
+resource "docker_image" "ghost"{
+    name = var.image_name
+}
+
+resource "docker_container" "ghost_blog1"{
+   name  = var.container_name
+   image = docker_image.ghost.name
+   ports {
+       internal= 2368
+       external= var.ext_port
+   }
+}
+
+======================================================================
+ubuntu@ip-172-31-8-76:~/terraform/assignment2$ terraform apply "tfplan"
+docker_image.ghost: Creating...
+docker_image.ghost: Still creating... [10s elapsed]
+docker_image.ghost: Still creating... [20s elapsed]
+docker_image.ghost: Creation complete after 22s [id=sha256:f1eb82caebb17ceb26f0c7e2389cdbfa7c9b196923483da04b4efc9f7ed3bf5eghost:latest]
+docker_container.ghost_blog1: Creating...
+docker_container.ghost_blog1: Creation complete after 2s [id=ccedd53ac967d17360a9b84a80ab47f71de51b91a4b1108fc8a800d13210d974]
+
+Apply complete! Resources: 2 added, 0 changed, 0 destroyed.
+
+==============================================================
+
+ubuntu@ip-172-31-8-76:~/terraform/assignment2$ docker ps
+CONTAINER ID        IMAGE               COMMAND                  CREATED              STATUS              PORTS                    NAMES
+ccedd53ac967        ghost:latest        "docker-entrypoint.s…"   About a minute ago   Up About a minute   0.0.0.0:8080->2368/tcp   ghost_blog
+============================================
